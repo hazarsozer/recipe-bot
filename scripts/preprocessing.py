@@ -58,10 +58,19 @@ def calculate_nutrition_mass(df):
 
 def filter_outliers(df):
     """
-    Applies physics-based filters to remove fake/broken recipes.
+    Applies physics-based filters and structural integrity checks to remove fake/broken recipes.
     - Removes 0-calorie or 0-minute items.
     - Removes items with impossible calorie density (missing ingredients).
+    - Removes items with no name, ingredients, or steps.
     """
+
+    initial_count = len(df)
+    df = df.dropna(subset=['name', 'ingredients', 'steps'])
+
+    df = df[df['name'] != '']
+
+    print(f"   - Removed {initial_count - len(df)} items due to missing essential fields.")
+
     # Range Check
     mask_range = (
         (df['calories'] > 10) & 
