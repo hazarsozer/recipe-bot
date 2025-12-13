@@ -1,0 +1,6 @@
+*.csv
+*.pkl
+.venv/
+__pycache__/
+.DS_Store
+data/training/*.jsonl
