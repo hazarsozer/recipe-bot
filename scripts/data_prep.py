@@ -63,7 +63,15 @@ def format_recipe_body(row):
 
     steps_string = ""
     for i, step in enumerate(row['steps'], start=1):
-        steps_string += f"{i}. {step.capitalize()}\n"
+        clean_step = step.strip()
+        if clean_step:
+            formatted_step = clean_step[0].upper() + clean_step[1:]
+        else:
+            formatted_step = ""
+            
+        steps_string += f"{i}. {formatted_step}\n"
+
+    name = row['name'].strip()
 
     return f"**{row['name'].title()}**\n\nIngredients:\n- {ingredients_string}\n\n**Instructions:**\n{steps_string}"
     
