@@ -1,0 +1,44 @@
+{"rule": "Safe Temp: Poultry", "content": "All poultry (breasts, whole bird, legs, thighs, wings, ground poultry) must be cooked to 165°F (74°C)."}
+{"rule": "Safe Temp: Ground Meat", "content": "Ground beef, pork, veal, and lamb must be cooked to 160°F (71°C)."}
+{"rule": "Safe Temp: Whole Cuts", "content": "Steaks, chops, and roasts (beef, pork, veal, lamb) must reach 145°F (63°C) and rest for 3 minutes."}
+{"rule": "Safe Temp: Fish", "content": "Fish must be cooked to 145°F (63°C) or until flesh is opaque and separates easily."}
+{"rule": "Safe Temp: Eggs", "content": "Cook eggs until yolk and white are firm. Egg dishes must reach 160°F (71°C)."}
+{"rule": "Safe Temp: Leftovers", "content": "All leftovers and casseroles must be reheated to an internal temperature of 165°F (74°C)."}
+{"rule": "Danger Zone", "content": "Bacteria grow rapidly between 40°F and 140°F. Never leave food in this range for more than 2 hours (1 hour if above 90°F)."}
+{"rule": "Storage: Cooked Rice", "content": "Cooked rice is prone to Bacillus cereus. Refrigerate within 1 hour and keep for max 3-4 days."}
+{"rule": "Storage: Mayo & Cream", "content": "Foods containing mayonnaise, cream, or dairy that have been left out for more than 2 hours must be discarded."}
+{"rule": "Storage: Raw Chicken", "content": "Raw poultry should only be kept in the fridge for 1-2 days. Freeze it if you won't use it by then."}
+{"rule": "Storage: Red Meat", "content": "Raw steaks, roasts, and chops can be kept in the fridge for 3-5 days."}
+{"rule": "Storage: Ground Meat", "content": "Raw ground meat (beef, turkey, veal, pork) keeps in the fridge for only 1-2 days."}
+{"rule": "Storage: Eggs", "content": "Raw eggs in shell keep for 3-5 weeks. Hard-boiled eggs keep for 1 week."}
+{"rule": "Thawing: Countertop", "content": "NEVER thaw perishable foods on the counter. The outside warms up while the inside is frozen, inviting bacteria."}
+{"rule": "Thawing: Cold Water", "content": "Thaw in leak-proof bag submerged in cold water. Change water every 30 minutes. Cook immediately after thawing."}
+{"rule": "Prep: Washing Meat", "content": "Do NOT wash raw poultry or meat. It spreads bacteria to sink and counters via splashing."}
+{"rule": "Prep: Cross Contamination", "content": "Use separate cutting boards for produce and raw meat. Wash hands/tools with hot soapy water after touching raw meat."}
+{"rule": "Botulism: Garlic in Oil", "content": "Homemade garlic-in-oil mixtures must be refrigerated and used within 7 days. Left at room temp, they can cause fatal botulism."}
+{"rule": "Botulism: Canned Goods", "content": "Never use food from cans that are leaking, bulging, rusting, or badly dented. This may indicate botulism."}
+{"rule": "Botulism: Potatoes", "content": "Baked potatoes wrapped in foil must be kept hot (above 140°F) or refrigerated immediately. Do not leave them at room temp in foil."}
+{"rule": "Seafood: Oysters", "content": "Eating raw oysters puts you at risk for Vibrio bacteria. Cook shellfish until shells open; discard any that don't open."}
+{"rule": "Dairy: Raw Milk", "content": "Unpasteurized (raw) milk can carry Salmonella, E. coli, and Listeria. It is especially dangerous for children and pregnant women."}
+{"rule": "Vulnerable: Pregnant Women", "content": "Pregnant women should avoid raw fish (sushi), unpasteurized cheese (brie, feta), and deli meats (unless heated to steaming) due to Listeria."}
+{"rule": "Vulnerable: Infants & Honey", "content": "Do not give honey to children under 1 year. It can contain botulism spores their immune systems cannot fight."}
+{"rule": "Hygiene: Hand Washing", "content": "Wash hands with soap and warm water for 20 seconds before cooking and after handling raw meat or eggs."}
+{"rule": "Storage: Freezer Life", "content": "Food frozen at 0°F remains safe indefinitely, but quality/texture degrades after 3-12 months depending on the item."}
+{"rule": "Oils: Smoke Point", "content": "Do not heat oils beyond their smoke point (e.g., Extra Virgin Olive Oil ~375°F). Overheated oil releases carcinogens."}
+{"rule": "Fires: Grease Fire", "content": "NEVER use water on a grease fire. Smother with a metal lid or baking soda, or use a Class B extinguisher."}
+{"rule": "Chemicals: Bleach", "content": "Never mix bleach with ammonia or vinegar. It creates deadly chlorine gas."}
+{"rule": "Mold: Soft Foods", "content": "If mold appears on soft food (bread, yogurt, soft cheese, soft fruit), discard the entire item. Roots may go deep."}
+{"rule": "Mold: Hard Cheese", "content": "If mold appears on hard cheese, cut off at least 1 inch around and below the mold spot. The rest is safe."}
+{"rule": "Prep: Marinades", "content": "Never reuse marinade used on raw meat as a sauce unless you boil it first to kill bacteria."}
+{"rule": "Doneness: Color vs Temp", "content": "Color is NOT a reliable indicator of doneness (especially for burgers). Always use a meat thermometer."}
+{"rule": "Storage: Opened Sauce", "content": "Refrigerate pasta sauce, salsa, and condiments after opening. Check label for 'Refrigerate After Opening'."}
+{"rule": "Canning: Pressure Canner", "content": "Low-acid foods (vegetables, meats) must be canned using a pressure canner to prevent botulism."}
+{"rule": "Canning: Water Bath", "content": "High-acid foods (fruits, pickles, tomatoes) can be safely canned in a boiling water bath."}
+{"rule": "Leftovers: Cooling", "content": "Cool leftovers quickly by dividing into small shallow containers. Refrigerate within 2 hours (1 hour if above 90°F)."}
+{"rule": "Leftovers: Reheating", "content": "Reheat leftovers to an internal temperature of 165°F before consuming."}
+{"rule": "Poultry: Stuffing", "content": "Cook stuffing separately from poultry to ensure it reaches a safe temperature of 165°F."}
+{"rule": "Salads: Potato & Egg", "content": "Potato and egg salads must be kept refrigerated and consumed within 3-5 days."}
+{"rule": "Seafood: Sushi", "content": "Consume sushi from reputable sources that follow proper freezing protocols to kill parasites."}
+{"rule": "Allergens: Label Reading", "content": "Always read labels for potential allergens, especially when trying new products."}
+{"rule": "Utensils: Sanitizing", "content": "Sanitize cutting boards and utensils after use with raw meat using a solution of 1 tablespoon bleach per gallon of water."}
+{"rule": "Food Recalls", "content": "Stay informed about food recalls from reliable sources to avoid consuming contaminated products."}

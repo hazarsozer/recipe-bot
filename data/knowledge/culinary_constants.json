@@ -1,0 +1,140 @@
+{
+  "substitutions": {
+    "dairy": {
+      "buttermilk": [
+        {"sub": "Milk + Acid", "ratio": "1 cup milk + 1 tbsp lemon juice/vinegar (wait 5 mins)", "tags": ["baking", "marinades"]},
+        {"sub": "Plain Yogurt", "ratio": "1:1 ratio", "tags": ["baking", "dips"]}
+      ],
+      "heavy_cream": [
+        {"sub": "Milk + Butter", "ratio": "3/4 cup milk + 1/3 cup melted butter", "tags": ["cooking", "sauces"]},
+        {"sub": "Coconut Cream", "ratio": "1:1 ratio (skim solids)", "tags": ["vegan", "curries", "soups"]},
+        {"sub": "Half-and-Half", "ratio": "1:1 ratio", "tags": ["coffee", "sauces"]}
+      ],
+      "sour_cream": [
+        {"sub": "Greek Yogurt", "ratio": "1:1 ratio", "tags": ["healthy", "baking", "toppings"]},
+        {"sub": "Cottage Cheese", "ratio": "1:1 ratio (blended)", "tags": ["high-protein", "dips"]}
+      ],
+      "butter": [
+        {"sub": "Vegetable Oil", "ratio": "7/8 cup oil for 1 cup butter", "tags": ["baking", "moist"]},
+        {"sub": "Applesauce", "ratio": "1:1 ratio", "tags": ["low-fat", "baking"]},
+        {"sub": "Ghee", "ratio": "1:1 ratio", "tags": ["lactose-free", "high-heat"]}
+      ],
+      "parmesan_cheese": [
+        {"sub": "Nutritional Yeast", "ratio": "1:1 ratio", "tags": ["vegan", "umami"]},
+        {"sub": "Pecorino Romano", "ratio": "1:1 ratio", "tags": ["salty", "italian"]}
+      ]
+    },
+    "pantry_staples": {
+      "egg": [
+        {"sub": "Flax Egg", "ratio": "1 tbsp flax meal + 3 tbsp water", "tags": ["vegan", "binding"]},
+        {"sub": "Chia Egg", "ratio": "1 tbsp chia seeds + 3 tbsp water", "tags": ["vegan", "binding"]},
+        {"sub": "Applesauce", "ratio": "1/4 cup per egg", "tags": ["baking", "moisture"]},
+        {"sub": "Aquafaba", "ratio": "3 tbsp chickpea liquid per egg", "tags": ["vegan", "meringue"]}
+      ],
+      "bread_crumbs": [
+        {"sub": "Rolled Oats", "ratio": "1:1 (blended)", "tags": ["gluten-free", "meatballs"]},
+        {"sub": "Crushed Crackers", "ratio": "1:1 ratio", "tags": ["casseroles"]},
+        {"sub": "Almond Flour", "ratio": "1:1 ratio", "tags": ["keto", "gluten-free"]}
+      ],
+      "cornstarch": [
+        {"sub": "All-Purpose Flour", "ratio": "2 tbsp flour for 1 tbsp cornstarch", "tags": ["thickening"]},
+        {"sub": "Arrowroot Powder", "ratio": "1:1 ratio", "tags": ["paleo", "clear-sauces"]},
+        {"sub": "Potato Starch", "ratio": "1:1 ratio", "tags": ["gluten-free"]}
+      ],
+      "mayonnaise": [
+        {"sub": "Greek Yogurt", "ratio": "1:1 ratio", "tags": ["healthy", "creamy"]},
+        {"sub": "Avocado", "ratio": "1:1 mashed", "tags": ["vegan", "healthy-fats"]}
+      ]
+    },
+    "flavor_bases": {
+      "soy_sauce": [
+        {"sub": "Tamari", "ratio": "1:1 ratio", "tags": ["gluten-free"]},
+        {"sub": "Coconut Aminos", "ratio": "1:1 ratio", "tags": ["soy-free", "paleo"]},
+        {"sub": "Worcestershire Sauce", "ratio": "1:1 (mix with water)", "tags": ["savory"]}
+      ],
+      "lemon_juice": [
+        {"sub": "Vinegar (White/Cider)", "ratio": "1/2 tsp vinegar for 1 tsp lemon", "tags": ["acid"]},
+        {"sub": "White Wine", "ratio": "1:1 ratio", "tags": ["cooking"]}
+      ],
+      "white_wine": [
+        {"sub": "Chicken/Veggie Broth", "ratio": "1:1 ratio", "tags": ["alcohol-free"]},
+        {"sub": "Apple Cider Vinegar + Water", "ratio": "1 tbsp vinegar + 1 cup water", "tags": ["acidic"]}
+      ],
+      "red_wine": [
+        {"sub": "Beef Broth", "ratio": "1:1 ratio", "tags": ["alcohol-free", "stews"]},
+        {"sub": "Cranberry Juice", "ratio": "1:1 ratio (unsweetened)", "tags": ["color", "acid"]}
+      ],
+      "garlic": [
+        {"sub": "Garlic Powder", "ratio": "1/8 tsp powder = 1 clove", "tags": ["pantry"]},
+        {"sub": "Shallots", "ratio": "1 tbsp minced = 1 clove", "tags": ["fresh"]}
+      ],
+      "tomato_paste": [
+        {"sub": "Tomato Sauce", "ratio": "3 tbsp sauce for 1 tbsp paste (reduce liquid elsewhere)", "tags": ["pantry"]},
+        {"sub": "Ketchup", "ratio": "1:1 ratio (sweeter)", "tags": ["emergency"]}
+      ]
+    },
+    "sweeteners": {
+      "sugar": [
+        {"sub": "Honey", "ratio": "3/4 cup honey for 1 cup sugar (reduce liquid by 2 tbsp)", "tags": ["natural", "moist"]},
+        {"sub": "Maple Syrup", "ratio": "3/4 cup maple for 1 cup sugar (reduce liquid by 3 tbsp)", "tags": ["vegan", "rich"]},
+        {"sub": "Stevia", "ratio": "Check package (usually much less)", "tags": ["keto", "sugar-free"]}
+      ],
+      "brown_sugar": [
+        {"sub": "White Sugar + Molasses", "ratio": "1 cup sugar + 1 tbsp molasses", "tags": ["homemade"]},
+        {"sub": "Coconut Sugar", "ratio": "1:1 ratio", "tags": ["natural", "dry"]}
+      ]
+    }
+  },
+  "herb_spice_logic": {
+    "fresh_to_dried_rule": "Use 1/3 amount of dried herbs for fresh (Dried is more potent)",
+    "dried_to_fresh_rule": "Use 3x amount of fresh herbs for dried",
+    "specifics": {
+      "fresh_basil": "1 tbsp",
+      "dried_basil": "1 tsp",
+      "ginger_fresh": "1 tbsp grated = 1/4 tsp ground"
+    }
+  },
+  "conversions": {
+    "volume_liquid": {
+      "tsp_ml": 5,
+      "tbsp_ml": 15,
+      "fl_oz_ml": 30,
+      "cup_ml": 240,
+      "pint_ml": 473,
+      "quart_ml": 946,
+      "gallon_liter": 3.785
+    },
+    "weight_mass": {
+      "oz_g": 28.35,
+      "lb_g": 453.6,
+      "kg_lbs": 2.204
+    },
+    "temperature": {
+      "formula_f_to_c": "(F - 32) * 5/9",
+      "formula_c_to_f": "(C * 9/5) + 32",
+      "oven_slow": "300F / 150C",
+      "oven_moderate": "350F / 180C",
+      "oven_hot": "400F / 200C",
+      "oven_very_hot": "450F / 230C"
+    }
+  },
+  "common_item_weights_grams": {
+    "onion_medium": 150,
+    "potato_medium": 213,
+    "carrot_medium": 61,
+    "apple_medium": 182,
+    "garlic_clove": 5,
+    "egg_large": 50,
+    "cup_flour_ap": 120,
+    "cup_sugar_white": 200,
+    "cup_sugar_brown": 220,
+    "cup_rice_raw": 185,
+    "cup_oats_rolled": 90,
+    "cup_butter": 227,
+    "cup_oil": 218,
+    "cup_water": 237,
+    "cup_honey": 340,
+    "banana_medium": 118,
+    "chicken_breast": 174
+  }
+}
