@@ -1,6 +1,17 @@
+# Data Manipulation
 pandas
-requests
+numpy
+scikit-learn
+
+# Scraping & Web
 beautifulsoup4
-recipe-scrapers
-opendatasets
+requests
+
+# Visualization (for Notebooks)
+matplotlib
+seaborn
+
+# Notebook Utilities
+jupyter
 ipykernel
+tqdm

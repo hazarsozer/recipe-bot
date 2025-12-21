@@ -1,8 +1,26 @@
-*.csv
-*.pkl
+# --- Environments ---
 .venv/
-__pycache__/
-.DS_Store
-data/training/*.jsonl
 .llm-env/
-data/knowledge/*.jsonl
+__pycache__/
+*.pyc
+
+# --- Large Data (Don't push these!) ---
+data/
+!data/knowledge/
+!data/synthetic/
+chroma_db/
+!unsloth_compiled_cache/
+
+# --- Models ---
+# If your adapter is small (<100MB), you can comment this out.
+# If it's large, keep this and use HuggingFace Hub instead.
+models/
+
+# --- IDE Settings ---
+.vscode/
+.idea/
+.DS_Store
+
+# -- Test For Now --
+scripts/app.py
+scripts/chat.py

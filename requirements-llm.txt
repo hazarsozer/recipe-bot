@@ -1,23 +1,17 @@
-# --- Core Deep Learning (CUDA 12.4 Compatible) ---
-# Note: Install these with --index-url https://download.pytorch.org/whl/cu124
-torch>=2.4.0
-torchvision
-torchaudio
+# Core AI
+torch
+transformers
 
-# --- Hugging Face Ecosystem ---
-transformers>=4.40.0
-datasets
-accelerate>=0.27.0
-trl>=0.8.0
+# Optimization & Quantization
+unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
+accelerate
+bitsandbytes
 
-# --- Efficient Training (The Magic) ---
-peft                    # LoRA adapters
-bitsandbytes>=0.43.0    # 8-bit optimization
+# Vector Database (RAG)
+chromadb
+sentence-transformers
 
-# --- Utilities ---
-scipy
-sentencepiece           # Required for Mistral/Llama tokenizers
-protobuf                # Required for some tokenizer formats
-ipykernel               # For Jupyter Notebooks
-jupyter
-pandas
+# Utilities
+huggingface_hub
+protobuf
+python-dotenv
