@@ -397,19 +397,38 @@ class ChefAI:
         Workflow with SESSION ID support.
         """
         session = self._get_session(session_id)
+        current_dish = session.get('current_dish')
         
         print(f"\n🔎 [DEBUG][{session_id}] --- Starting Recipe Pipeline ---")
 
         # Ideation step (Mistral)
-        ideation_prompt = textwrap.dedent(f"""
-        Input: I have beef.
-        Dish: Beef Stew
-        
-        Input: I want salmon.
-        Dish: Pan Seared Salmon
-        
-        Input: "{user_input}"
-        Dish:""").strip()
+        if current_dish:
+             print(f"🧠 [DEBUG][{session_id}] Context Found: '{current_dish}'")
+             ideation_prompt = textwrap.dedent(f"""
+             Context: The user is currently cooking "{current_dish}".
+             
+             Input: Make it spicy.
+             Dish: Spicy {current_dish}
+             
+             Input: Remove the vegetables.
+             Dish: {current_dish} (Meat Only)
+
+             Input: I want something else.
+             Dish: [New Dish Name]
+
+             Input: "{user_input}"
+             Dish:""").strip()
+        else:
+             # Standard Cold Start Prompt
+             ideation_prompt = textwrap.dedent(f"""
+             Input: I have beef.
+             Dish: Beef Stew
+             
+             Input: I want salmon.
+             Dish: Pan Seared Salmon
+             
+             Input: "{user_input}"
+             Dish:""").strip()
 
         raw_idea = self.run_inference(
             model=self.chef_model,
@@ -432,9 +451,13 @@ class ChefAI:
 
         # Cleaning step (Phi-3)
         extraction_prompt = textwrap.dedent(f"""<|user|>
-        Task: Extract the exact food dish name from the text below. 
-        Remove any filler words like "Here is", "I suggest", "Dish Name:", or punctuation.
-        Output ONLY the dish name.
+        Task: Extract the specific food dish name from the Input Text.
+        
+        RULES:
+        1. Remove conversational fillers (e.g. "I suggest", "Here is").
+        2. Keep the full dish name including adjectives (e.g. "Spicy", "Vegan").
+        3. CRITICAL: Do NOT add any new words. Only use words found in the Input Text.
+        4. Output ONLY the cleaned name.
 
         Text: "{raw_idea}"
         <|end|><|assistant|>""").strip()
@@ -476,8 +499,8 @@ class ChefAI:
         {dish_recipes}
 
         Task: Write ONE single recipe for {clean_idea}.
-        1. Use the User Input ingredients.
-        2. If References don't match (e.g. wrong meat), IGNORE THEM and write your own recipe.
+        1. CRITICAL: PRIORITIZE THE USER INPUT INGREDIENTS.
+        2. If References don't match or use different ingredients (e.g. wrong meat), IGNORE THEM and write your own recipe.
         3. Include Ingredients and Steps.
         4. DO NOT write a second recipe. STOP after the steps.
 
@@ -526,7 +549,7 @@ class ChefAI:
             tokenizer=self.waiter_tokenizer,
             prompt=plating_prompt,
             max_tokens=600,
-            repeat_penalty=1.0, 
+            repeat_penalty=1.05, 
             temperature=0.2 
         )
 
