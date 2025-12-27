@@ -35,22 +35,29 @@ class ChefAI:
         )
         FastLanguageModel.for_inference(self.waiter_model)
 
-        # Session state
-        self.current_dish = None
-        self.current_recipe_text = None
-        self.chat_history = []
+        # Multi-user session storage
+        self.sessions = {}
 
         print("✅ ChefAI is ready to serve!")
+
+    def _get_session(self, session_id):
+        """
+        Retrieves the specific memory for a user. 
+        If it doesn't exist, creates a new empty memory slot.
+        """
+        if session_id not in self.sessions:
+            self.sessions[session_id] = {
+                "current_dish": None,
+                "current_recipe_text": None,
+                "chat_history": []
+            }
+        return self.sessions[session_id]
 
     def run_inference(self, model, tokenizer, prompt, max_tokens=512, repeat_penalty=1.1, temperature=0.6):
         """ 
         Run inference on the given model with the provided prompt. 
         """
-
-        # Tokenize input
         inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
-
-        # Generate output
         outputs = model.generate(
             **inputs,
             max_new_tokens=max_tokens,
@@ -60,38 +67,35 @@ class ChefAI:
             temperature = temperature,
             do_sample = True
         )
-
-        # Decode output
         new_tokens = outputs[0][inputs['input_ids'].shape[-1]:]
-
         return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
     
-    def _update_history(self, user_text, bot_text):
+    def _update_history(self, session_id, user_text, bot_text):
         """
-        Internal helper to save chat to memory.
+        Internal helper to save chat to SPECIFIC USER memory.
         """
-
-        # Appending new interaction
-        self.chat_history.append(f"User: {user_text}")
-        self.chat_history.append(f"Chef: {bot_text}")
+        session = self._get_session(session_id)
+        session['chat_history'].append(f"User: {user_text}")
+        session['chat_history'].append(f"Chef: {bot_text}")
 
         # Enforcing sliding window
-        if len(self.chat_history) > 6:
-            self.chat_history = self.chat_history[-6:]
+        if len(session['chat_history']) > 6:
+            session['chat_history'] = session['chat_history'][-6:]
     
-    def router(self, user_input):
+    def router(self, user_input, session_id="default"):
         """
         Route the user input to the appropriate model (Brain or Mouth).
+        Now accepts session_id to track context.
         """
         
         # Classification prompt
         prompt = textwrap.dedent(f"""<|user|>
-        Task: You're a logic router. Classify the User Input into exactly one category: RECIPE, CHAT, or FOOD_RELATED.
+        Task: Classify User Input into ONE category: RECIPE, CHAT, or FOOD_RELATED.
 
         DEFINITIONS:
-        1. RECIPE: User wants to cook, eat, or asks for a dish suggestion. (e.g. "What can I make?", "I have chicken").
-        2. CHAT: User is greeting, introducing themselves, or stating their identity. (e.g. "Hi", "Who are you?", "I love food").
-        3. FOOD_RELATED: User asks about science, safety, or measurements. (e.g. "Is this safe?", "How many grams?").
+        1. RECIPE: User explicitly asks for a NEW dish, a different dish, or provides NEW ingredients to start over. (e.g. "Cook X", "No, I want Salmon", "I have beef instead").
+        2. CHAT: Greetings, compliments, or general conversation. (e.g. "Hi", "Thanks", "Good evening").
+        3. FOOD_RELATED: Questions about the CURRENT recipe. Includes: Steps, Safety, Scaling portions, or asking for measurements. (e.g. "How much?", "For 3 people?", "Next step", "Is it safe?").
 
         User Input: "{user_input}"
         
@@ -108,30 +112,37 @@ class ChefAI:
 
         intent = intent.replace("CATEGORY:", "").strip().split()[0].replace(".", "")
 
+        # DEBUG START
+        print(f"🔀 [DEBUG][{session_id}] Router Intent: {intent}")
+        # DEBUG END
+
         if "RECIPE" in intent:
-            return self.handle_recipe(user_input)
+            return self.handle_recipe(user_input, session_id)
         elif "CHAT" in intent:
-            return self.handle_chat(user_input)
+            return self.handle_chat(user_input, session_id)
         elif "FOOD_RELATED" in intent:
-            return self.handle_food_related(user_input)
+            return self.handle_food_related(user_input, session_id)
         else:
-            # If router gets confused default to CHAT
-            return self.handle_chat(user_input)
+            return self.handle_chat(user_input, session_id)
         
-    def handle_chat(self, user_input):
+    def handle_chat(self, user_input, session_id):
         """
         Gives the output if intent is to chat.
         """
-
-        # History string
-        history_str = '\n'.join(self.chat_history)
+        session = self._get_session(session_id)
+        
+        # History string from SESSION storage
+        history_str = '\n'.join(session['chat_history'])
 
         prompt = textwrap.dedent(f"""<|user|>
-        Task: You're the front model of an AI Chef Agent. When user comes with intent 
-        to chat, you do the talking politely like a host greeting and chatting with 
-        his customers. You should try to comply with users requests, but if the topic
-        is too far away from culinary you should remind them you're a Chef here to 
-        help them about their culinary questions. Usually try to keep it short.
+        Task: You are the AI Chef.
+        
+        RULES:
+        1. Be warm and friendly, but EXTREMELY CONCISE.
+        2. Answer in 1 or 2 sentences MAXIMUM if a long response is not necessary.
+        3. Do not give long speeches.
+        4. If the user says "Thank you", reply with "You're welcome! Enjoy your meal." or "Bon Appétit!".
+        5. If greeting, just say hello and ask what they want to cook.
 
         PREVIOUS CONVERSATION:
         {history_str}
@@ -143,14 +154,15 @@ class ChefAI:
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
             prompt=prompt,
-            max_tokens=150
+            max_tokens=100,
+            temperature=0.3
         )
 
-        self._update_history(user_input, output)
+        self._update_history(session_id, user_input, output)
 
         return output
     
-    def handle_food_related(self, user_input):
+    def handle_food_related(self, user_input, session_id):
         """
         Step 1: Sub-classify the intent.
         Step 2: Route to the correct tool or model.
@@ -176,34 +188,41 @@ class ChefAI:
             max_tokens=10
         ).upper()
 
+        # DEBUG START
+        print(f"🚦 [DEBUG][{session_id}] Food Sub-Intent: {sub_intent}")
+        # DEBUG END
+
         # Routing
         if "SAFETY" in sub_intent:
-            return self.handle_safety_query(user_input)
-        
+            return self.handle_safety_query(user_input, session_id)
         elif "CONSTANTS" in sub_intent:
-            return self.handle_constant_query(user_input)
-        
+            return self.handle_constant_query(user_input, session_id)
         elif "INSTRUCT" in sub_intent:
-            return self.handle_instruction_query(user_input)
-        
+            return self.handle_instruction_query(user_input, session_id)
         else:
             return self.escalate_to_brain(user_input)
         
-    def handle_safety_query(self, user_input):
+    def handle_safety_query(self, user_input, session_id):
         """
         Specialist function for safety questions.
         Uses RAG to find specific rules in 'chef_safety' collection.
         """
-
+        session = self._get_session(session_id)
+        
         safety_context = self.tools.check_safety(user_input)
+        
+        # DEBUG START
+        print(f"🛡️ [DEBUG] RAG Safety Context: {str(safety_context)[:100]}...")
+        # DEBUG END
+
         if not safety_context:
             safety_context = "No specific strict rules found. Use your general food safety knowledge."
 
         recipe_context = ""
-        if self.current_recipe_text:
-            recipe_context = f"\nCURRENT RECIPE STEPS:\n{self.current_recipe_text}\n"
+        # Accessing session specific recipe text
+        if session['current_recipe_text']:
+            recipe_context = f"\nCURRENT RECIPE STEPS:\n{session['current_recipe_text']}\n"
 
-        # Specialist prompt
         prompt = textwrap.dedent(f"""<|user|>
         User Input: "{user_input}"
 
@@ -220,7 +239,6 @@ class ChefAI:
         Start with "⚠️ SAFETY FIRST:" if there's a risk.<|end|>
         <|assistant|>""").strip()
 
-        # Output generation
         output = self.run_inference(
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
@@ -230,86 +248,109 @@ class ChefAI:
 
         return output
     
-    def handle_constant_query(self, user_input):
+    def handle_constant_query(self, user_input, session_id):
         """
         Specialist function for culinary conversion and substitution questions.
-        Uses RAG to find specific rules in culinary_constans JSON file.
+        Now context-aware!
         """
+        session = self._get_session(session_id)
+        
+        # Load the current recipe context if it exists
+        if session['current_recipe_text']:
+            recipe_context = f"\nCURRENT RECIPE CONTEXT:\n{session['current_recipe_text']}\n"
+        else:
+            recipe_context = ""
 
         # Get data context for conversion or substitutions
         data_context = self.tools.search_constants(user_input)
 
+        # DEBUG START
+        print(f"📏 [DEBUG][{session_id}] RAG Constants Data: {str(data_context)[:100]}...")
+        # DEBUG END
+
         if not data_context:
             data_context = "No specific context found about the user input. Use your general knowledge in culinary."
         
-        # Specialist prompt
         prompt = textwrap.dedent(f"""<|user|>
         User Input: "{user_input}"
+        
+        {recipe_context}
 
-        DATA FOUND ABOUT CONTEXT FOR YOUR USE:
+        REFERENCE DATA (May be irrelevant):
         {data_context}
 
-        Task: You're the front model of an AI Chef Agent. As a Chef Instructor, you should
-        answer user's question or request politely using the DATA that given above. 
-        Be precise with your numbers. If the data don't cover it, use your general 
-        knowledge about conversions, substitutions or other type of knowledge to give
-        an answer to user.<|end|>
+        Task: You are a helpful Chef Instructor. Answer the user's request.
+        
+        RULES:
+        1. SCALING: If the user asks to scale (e.g. "for 4 people"), FIRST check the ingredients to guess how many the recipe ALREADY serves. Only increase amounts if necessary.
+        2. SUBSTITUTIONS: If the user asks to replace an ingredient (due to allergy or missing item), suggest a simple, common culinary alternative (e.g. "Use Vegetable Oil or Canola Oil").
+        3. INTELLIGENCE: Use the REFERENCE DATA *only* if it directly answers the question. If the data talks about "Smoke Points" but the user asks about "Allergies", IGNORE THE DATA and use your own knowledge.
+        4. SCALING: If scaling, use the CURRENT RECIPE CONTEXT to calculate numbers.
+        5. Keep it short and helpful.
+        <|end|>
         <|assistant|>""").strip()
 
-        # Output generation
         output = self.run_inference(
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
             prompt=prompt,
-            max_tokens=100,
-            temperature=0.1 # Forcing strict logic for math
+            max_tokens=200,
+            temperature=0.1
         )
 
         return output
     
-    def handle_instruction_query(self, user_input):
+    def handle_instruction_query(self, user_input, session_id):
         """
-        Speciaist function for detailing and explaining instructions.
-        Uses 'self.current_dish' to give context-aware advice.
+        Specialist function for detailing and explaining instructions.
+        Uses SESSION specific context.
         """
+        session = self._get_session(session_id)
+        current_dish = session['current_dish']
+        
+        # Sanitize the dish name variable
+        if current_dish and "\n" in current_dish:
+            safe_dish_name = current_dish.split('\n')[0]
+        else:
+            safe_dish_name = current_dish
 
         # Check if we have the specific instructions in memory
-        if self.current_recipe_text:
-            context_str = f"USER IS COOKING: '{self.current_dish}'\n\nOFFICIAL RECIPE STEPS:\n{self.current_recipe_text}"
-        elif self.current_dish:
-            context_str = f"USER IS COOKING: '{self.current_dish}' (No specific steps loaded)."
+        if session['current_recipe_text']:
+            context_str = f"CURRENT RECIPE:\n{session['current_recipe_text']}"
+        elif safe_dish_name:
+            context_str = f"USER IS COOKING: '{safe_dish_name}'"
         else:
-            context_str = "User is asking a general cooking question."
+            context_str = "No specific recipe loaded."
 
-        # Specialist prompt
         prompt = textwrap.dedent(f"""<|user|>
+        CONTEXT: 
+        {context_str}
+
         User Input: "{user_input}"
 
-        CONTEXT: {context_str}
-
-        Task: You're the front model of an AI Chef Agent. As a Chef Instructor, you should
-        answer user's request or confusion like a teacher. If user asks questions such as: 
-        "How long?", "How much?" or explanation for a specific instruction step check the
-        CONTEXT first before answering. Be patient and detailed. <|end|>
+        Task: Answer the user's question based ONLY on the context.
+        RULES:
+        1. Ignore any weird formatting in the context.
+        2. If asking for the First Step, look at Step 1 in the recipe.
+        3. If asking for quantities (e.g. "for 3 people"), ESTIMATE based on the ingredients.
+        4. Keep it simple and direct.
+        <|end|>
         <|assistant|>""").strip()
 
-        # Output generation
         output = self.run_inference(
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
             prompt=prompt,
             max_tokens=256,
+            temperature=0.1 
         )
 
         return output
     
     def escalate_to_brain(self, user_input):
         """
-        Step 1: Using fine-tuned Brain model for questions that Front model can't answer
-        Step 2: Using front model to rephrase the explanation and give output.
+        General explanations don't usually require specific session context.
         """
-
-        # Specialist prompt
         prompt_for_brain = textwrap.dedent(f"""### Instruction:
         User Input: "{user_input}"
 
@@ -319,7 +360,6 @@ class ChefAI:
         ### Response:
         """).strip()
 
-        # Brain model output generation
         explanation = self.run_inference(
             model=self.chef_model,
             tokenizer=self.chef_tokenizer,
@@ -327,6 +367,10 @@ class ChefAI:
             max_tokens=400,
             temperature=0.3
         )
+
+        # DEBUG START
+        print(f"🧠 [DEBUG] Brain Escalation Response: {explanation[:150]}...")
+        # DEBUG END
 
         prompt_for_mouth = textwrap.dedent(f"""<|user|>
         User Input: "{user_input}"
@@ -339,7 +383,6 @@ class ChefAI:
         question.<|end|>
         <|assistant|>""").strip()
 
-        # Output to user
         output = self.run_inference(
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
@@ -349,46 +392,48 @@ class ChefAI:
 
         return output
     
-    def handle_recipe(self, user_input):
+    def handle_recipe(self, user_input, session_id):
         """
-        Workflow:
-        -> Brain generates a dish name according to input.
-        -> We sanitize it using Phi-3 to extract just the name.
-        -> Using retrieval tools we check if we have any matching recipes.
-        -> Brain generates the recipe using retrieved recipes.
-        -> Front model presents it nicely (with repeat_penalty disabled).
+        Workflow with SESSION ID support.
         """
+        session = self._get_session(session_id)
+        
+        print(f"\n🔎 [DEBUG][{session_id}] --- Starting Recipe Pipeline ---")
 
-        # --- STEP 1: IDEATION (Mistral) ---
-        ideation_prompt = textwrap.dedent(f"""### Instruction:
-        Task: You're the backend Brain model of an AI Chef Agent. As an Executive
-        Chef, identify the dish name based on the user's request. Output ONLY the name.
-
-        Input: I have beef and potatoes.
-        Example Dish Name: Beef Stew
-
-        Input: Make me something with eggs.
-        Example Dish Name: Omelet
-
-        Input: I have salmon and rice.
-        Example Dish Name: Pan Seared Salmon
-
+        # Ideation step (Mistral)
+        ideation_prompt = textwrap.dedent(f"""
+        Input: I have beef.
+        Dish: Beef Stew
+        
+        Input: I want salmon.
+        Dish: Pan Seared Salmon
+        
         Input: "{user_input}"
-        Dish Name:
-        ### Response:
-        """).strip()
+        Dish:""").strip()
 
         raw_idea = self.run_inference(
             model=self.chef_model,
             tokenizer=self.chef_tokenizer,
             prompt=ideation_prompt,
-            max_tokens=50
-        ).strip('"').split('\n')[0]
+            max_tokens=50, 
+            temperature=0.1
+        ).strip('"').strip()
 
-        # --- STEP 2: SANITIZATION (Phi-3) ---
+        if "\n" in raw_idea:
+            raw_idea = raw_idea.split("\n")[0]
+
+        if not raw_idea or len(raw_idea) < 2:
+            print(f"⚠️ [DEBUG][{session_id}] Mistral Brain Freeze. Using User Input.")
+            raw_idea = user_input
+
+        # DEBUG START
+        print(f"🧠 [DEBUG][{session_id}] Step 1 - Mistral Raw Idea: '{raw_idea}'")
+        # DEBUG END
+
+        # Cleaning step (Phi-3)
         extraction_prompt = textwrap.dedent(f"""<|user|>
         Task: Extract the exact food dish name from the text below. 
-        Remove any filler words like "I suggest", "Try", "Dish:", punctuation, or recipes.
+        Remove any filler words like "Here is", "I suggest", "Dish Name:", or punctuation.
         Output ONLY the dish name.
 
         Text: "{raw_idea}"
@@ -398,32 +443,46 @@ class ChefAI:
             model=self.waiter_model,
             tokenizer=self.waiter_tokenizer,
             prompt=extraction_prompt,
-            max_tokens=20,
+            max_tokens=50,
             temperature=0.1
         )
 
-        self.current_dish = clean_idea
+        # Saving to session
+        session['current_dish'] = clean_idea
 
-        # --- STEP 3: RETRIEVAL ---
+        # DEBUG START
+        print(f"🧼 [DEBUG][{session_id}] Step 2 - Phi-3 Cleaned Name: '{clean_idea}'")
+        # DEBUG END
+
+        # Retrieving recipes from RAG
         dish_recipes = self.tools.get_recipes(clean_idea)
         
+        # DEBUG START
+        if dish_recipes:
+             print(f"📚 [DEBUG][{session_id}] Step 3 - RAG Found Content for '{clean_idea}'")
+        else:
+             print(f"📚 [DEBUG][{session_id}] Step 3 - RAG Found NOTHING")
+        # DEBUG END
+
         if not dish_recipes:
             dish_recipes = "No specific recipes for reference. Use your own knowledge and training."
 
-        # --- STEP 4: GENERATION (Mistral) ---
+        # Recipe generation (Mistral)
         recipe_prompt = textwrap.dedent(f"""### Instruction:
         User Input: "{user_input}"
-        Dish Name: {clean_idea}
+        Target Dish: {clean_idea}
 
         REFERENCES:
         {dish_recipes}
 
-        Task: You're the backend Brain model of an AI Chef Agent. As the Executive chef,
-        use the references above that given to you to create or suggest a recipe to the
-        user. If no specific references given, use your own knowledge and training to come
-        up with a recipe for user's needs.
+        Task: Write ONE single recipe for {clean_idea}.
+        1. Use the User Input ingredients.
+        2. If References don't match (e.g. wrong meat), IGNORE THEM and write your own recipe.
+        3. Include Ingredients and Steps.
+        4. DO NOT write a second recipe. STOP after the steps.
 
         ### Response:
+        Title: {clean_idea}
         """).strip()
 
         recipe = self.run_inference(
@@ -432,22 +491,34 @@ class ChefAI:
             prompt=recipe_prompt,
             max_tokens=600,
             temperature=0.3
-        ) 
+        )
 
-        # For safety
         if len(recipe) > 2500:
             recipe = recipe[:2500] + "... (truncated)"
 
-        self.current_recipe_text = recipe
+        # Saving to session
+        session['current_recipe_text'] = recipe
 
-        # --- STEP 5: PLATING (Phi-3) ---
+        # DEBUG START
+        print(f"📝 [DEBUG][{session_id}] Step 4 - Mistral Generated Recipe (First 400 chars):")
+        print(f"      {recipe[:400].replace(chr(10), ' ')}...")
+        # DEBUG END
+
+        # Plating for user (Phi-3)
         plating_prompt = textwrap.dedent(f"""<|user|>
-        User Input: "{user_input}"
-        Recipe: 
-        {recipe}
+        You are a Chef Editor. Format the raw recipe below into clean, readable Markdown.
+        
+        RULES:
+        1. Check the ingredients. If quantities are missing, ESTIMATE standard amounts for 1 PERSON (Single Serving), unless the "User Request" explicitly asks for more.
+        2. Use a Bold Title.
+        3. Use a Bulleted List for Ingredients (ensure every item has a quantity).
+        4. Use a Numbered List for Steps.
+        5. Be polite but brief in the intro.
+        6. CRITICAL: If the raw text contains multiple recipes (e.g. "Option 2"), IGNORE THEM. Only format the FIRST recipe.
 
-        Task: You are the front model of an AI Chef Agent. As a Chef Instructor,
-        rewrite the recipe from Executive Chef politely.<|end|>
+        RAW RECIPE: 
+        {recipe}
+        <|end|>
         <|assistant|>""").strip()
 
         output = self.run_inference(
@@ -455,45 +526,43 @@ class ChefAI:
             tokenizer=self.waiter_tokenizer,
             prompt=plating_prompt,
             max_tokens=600,
-            repeat_penalty=1.0 # CRITICAL FIX: Allows Phi-3 to rewrite naturally
+            repeat_penalty=1.0, 
+            temperature=0.2 
         )
 
-        return output
+        print(f"✅ [DEBUG][{session_id}] --- Pipeline Complete ---\n")
 
+        return output
 
 # Main Execution Loop
 if __name__ == "__main__":
     bot = ChefAI()
 
     print("\n" + "="*50)
-    print("👨‍🍳 CHEF AI IS READY TO SERVE!")
+    print("👨‍🍳 CHEF AI IS READY TO SERVE! (CLI MODE)")
     print("Type 'exit' or 'quit' to close the kitchen.")
     print("="*50 + "\n")
 
     while True:
         try:
-            # User input
             user_input = input("You: ").strip()
 
-            # Exit check
             if user_input.lower() in ["exit", "quit"]:
                 print("👨‍🍳 ChefAI: Kitchen is closing. Bon appétit!")
                 break
 
-            # Skipping empty inputs
             if not user_input:
                 continue
 
-            # The router handles everything
             print("\n... 👨‍🍳 Chef is thinking ...\n")
-            response = bot.router(user_input)
+            
+            # CLI uses a hardcoded ID "cli_user"
+            response = bot.router(user_input, session_id="cli_user")
 
-            # Print response
             print(f"\n👨‍🍳 ChefAI: {response}\n")
             print("-" * 50)
 
         except KeyboardInterrupt:
-            # Handle Ctrl+C gracefully
             print("\n\n👨‍🍳 ChefAI: Force shutdown detected. Goodbye!")
             break
         except Exception as e:
