@@ -10,35 +10,24 @@ Unlike standard AI that might suggest *“Cheeseburgers”* when you ask for a *
 
 Here is a quick guide to understanding the code in this repository:
 
-### 1. The Notebooks (The Research Phase)
+### 1. The Notebooks (Research & Pipeline)
+* `notebooks/data_gathering.ipynb`: **Step 1.** Scrapes recipes from the web and downloads datasets. Uses `scraper.py` to extract structured JSON-LD data.
+* `notebooks/eda.ipynb`: **Step 2.** The "Physics" filter. Uses `preprocessing.py` to calculate caloric density and remove "hallucinated" or broken recipes.
+* `notebooks/llm_data_prep.ipynb`: **Step 3.** Prepares the training data. Uses `data_prep.py` to inject synthetic "Persona Prompts" so the model learns to chat, not just complete text.
+* `notebooks/build_rag.ipynb`: **Step 4.** Builds the Vector Database. Uses `rag_builder.py` to ingest recipes and safety rules into ChromaDB.
+* `notebooks/train_chef_mistral.ipynb`: **Step 5 (Track 1).** Fine-tunes **Mistral 7B** using QLoRA. This became our final "Chef" model.
+* `notebooks/phi3_mini_fft.ipynb`: **Step 5 (Track 2).** Fine-tunes **Phi-3 Mini** (Full Fine-Tune). Used for comparison.
+* `notebooks/evaluation_notebook.ipynb`: **Step 6.** The Test Bench. Runs both models against 100 "Hallucination Traps" to prove our system is safer.
 
-- `notebooks/1_data_gathering.ipynb`  
-  Scrapes recipes from the web and downloads datasets. It specifically looks for structured data (such as prep time and nutrition).
-
-- `notebooks/2_eda.ipynb`  
-  The **Physics filter**. It calculates the caloric density of recipes and removes hallucinated or broken data (e.g., zero-calorie meals).
-
-- `notebooks/3_training.ipynb`  
-  The training code. This is where **Mistral 7B** was fine-tuned using QLoRA to create the *Chef* model.
-
-- `notebooks/4_evaluation.ipynb`  
-  The test bench. Models were evaluated against 100 *Hallucination Traps* (e.g., asking for vegan eggs) to demonstrate improved safety over standard models.
-
----
-
-### 2. The Scripts (The Application Phase)
-
-- `scripts/chefai.py`  
-  **The Brain.** Loads the models and decides whether the user wants to chat, cook, or ask safety-related questions.
-
-- `scripts/chef_tools.py`  
-  **The Tools.** Handles the Vector Database (RAG) for safety rules and recipe retrieval.
-
-- `scripts/api.py`  
-  Backend server implemented with FastAPI.
-
-- `scripts/frontend.py`  
-  Chat interface built with Streamlit.
+### 2. The Scripts (Production Application)
+* `scripts/scraper.py`: Helper functions for sitemap parsing and data extraction.
+* `scripts/preprocessing.py`: Physics-based filtering logic (Mass/Density calculations).
+* `scripts/data_prep.py`: Formatting logic for LLM instruction tuning.
+* `scripts/rag_builder.py`: Logic for creating and populating the ChromaDB vector store.
+* `scripts/chefai.py`: **The Brain.** Main agent class that loads models and handles routing.
+* `scripts/chef_tools.py`: **The Tools.** RAG search utilities for the agent.
+* `scripts/api.py`: The Backend Server (FastAPI).
+* `scripts/frontend.py`: The Chat Interface (Streamlit).
 
 ---
 
