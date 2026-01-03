@@ -1,91 +1,109 @@
-# 🍳 Constraint-Aware Recipe Generation: A Comparative LLM Fine-Tuning Study
+# 👨‍🍳 ChefAI: The Constraint-Aware Cooking Agent
 
-**Course:** YZV302E Deep Learning - Istanbul Technical University  
-**Authors:** * **Hazar Utku Sözer** (150220754) - Data Engineering & Data Pipeline & Deployment  
-* **Faruk Rıza Öz** (150220753) - Data Engineering & Data Pipeline & Deployment
+**ChefAI** is a smart cooking assistant that actually listens to your constraints.
 
----
-
-## 📖 Project Overview
-This project aims to develop an intelligent **"Recipe-Bot"** by fine-tuning Large Language Models (LLMs) to generate personalized recipes.
-
-**The Core Problem:** Standard LLMs (like GPT-4 or base Llama) struggle with strict constraints. They often:
-1.  **Hallucinate Ingredients:** Suggesting items the user doesn't have (e.g., adding milk when the user only listed eggs).
-2.  **Ignore Context:** Suggesting dinner recipes for breakfast.
-
-**Our Solution:** We treat recipe generation as a **Constraint Satisfaction Problem**. Instead of using RAG (Retrieval-Augmented Generation), we fine-tune the model to inherently understand and respect "Constraint Contexts" (Meal Type, Dietary Restrictions, Cooking Method).
+Unlike standard AI that might suggest *“Cheeseburgers”* when you ask for a *“Vegan Dinner,”* ChefAI uses a **Dual-Agent Architecture** to separate creativity from logic. It runs locally on your computer, ensuring privacy and strict adherence to your inventory.
 
 ---
 
-## 🔬 Methodology: The Comparative Approach
-As outlined in our research proposal, this project compares two distinct fine-tuning strategies to determine the optimal balance between model size and training precision.
+## 📂 Project Structure (What is everything?)
 
-### 🛤️ Track 1: Large-Model PEFT (Current Focus)
-* **Model:** `Mistral-7B-Instruct-v0.3`
-* **Technique:** **QLoRA** (Quantized Low-Rank Adaptation)
-* **Precision:** 4-bit (NF4) quantization with `bitsandbytes`.
-* **Hardware Target:** Consumer GPU (NVIDIA RTX 4070 Super / 12GB VRAM).
-* **Goal:** Efficient fine-tuning on local hardware.
+Here is a quick guide to understanding the code in this repository:
 
-### 🛤️ Track 2: Small-Model Full Fine-Tune (Planned)
-* **Model:** `Phi-3-mini` (3.8B)
-* **Technique:** Full Parameter Fine-Tuning.
-* **Precision:** BF16 (Bfloat16).
-* **Hardware Target:** Cloud/Data Center GPU.
-* **Goal:** Testing if a fully trained smaller model outperforms a quantized larger model.
+### 1. The Notebooks (The Research Phase)
 
----
+- `notebooks/1_data_gathering.ipynb`  
+  Scrapes recipes from the web and downloads datasets. It specifically looks for structured data (such as prep time and nutrition).
 
-## 📂 Project Structure
+- `notebooks/2_eda.ipynb`  
+  The **Physics filter**. It calculates the caloric density of recipes and removes hallucinated or broken data (e.g., zero-calorie meals).
 
-```bash
-├── data/
-│   ├── food-com-recipes.../ # Raw Public Datasets (Kaggle/Food.com)
-│   ├── processed/           # Cleaned DataFrames (Physics & Structure filtered)
-│   └── training/            # JSONL files formatted for SFTTrainer
-├── notebooks/
-│   ├── data_gathering.ipynb # Dataset download & merging strategy
-│   ├── eda.ipynb            # Exploratory Data Analysis & Cleaning Pipeline
-│   └── llm_data_prep.ipynb  # Feature Engineering (Tag -> Context Mapping)
-├── scripts/
-│   ├── preprocessing.py     # Data cleaning logic (Structure, Calorie/Mass checks)
-│   ├── data_prep.py         # Prompt engineering & Constraint extraction
-│   ├── scraper.py           # Web scraper for supplementary recipes
-│   └── train.py             # QLoRA Training Script (Track 1 implementation)
-└── README.md
-```
+- `notebooks/3_training.ipynb`  
+  The training code. This is where **Mistral 7B** was fine-tuned using QLoRA to create the *Chef* model.
 
-## 🧠 Feature Engineering: "Constraint Injection"
-We transform raw dataset tags into explicit natural language constraints to prevent context hallucinations. This ensures the model treats user preferences (like "Vegan" or "Slow Cooker") as strict rules rather than optional suggestions.
-
-| Raw Tags | Derived Context (Input to LLM) |
-| :--- | :--- |
-| `['breakfast', 'vegan']` | **"Context: Breakfast, Vegan"** |
-| `['slow-cooker', 'beef', 'dinner']` | **"Context: Dinner, Slow Cooker"** |
-| `['5-minutes', 'snack']` | **"Context: Snack, Very Quick"** |
-| `['air-fryer', 'chicken']` | **"Context: General Dish, Air Fryer"** |
-
-*See `scripts/data_prep.py` for the full mapping logic.*
+- `notebooks/4_evaluation.ipynb`  
+  The test bench. Models were evaluated against 100 *Hallucination Traps* (e.g., asking for vegan eggs) to demonstrate improved safety over standard models.
 
 ---
 
-## 🛠️ Setup & Usage
+### 2. The Scripts (The Application Phase)
 
-### 1. Environment Setup (Linux/WSL2)
-This project requires a GPU-accelerated environment (NVIDIA Drivers required).
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r scripts/requirements.txt
-# Key deps: torch, transformers, peft, bitsandbytes, trl, accelerate
-```
+- `scripts/chefai.py`  
+  **The Brain.** Loads the models and decides whether the user wants to chat, cook, or ask safety-related questions.
 
-### 2. Data Pipeline
-1. **Clean the Data:** Run `notebooks/eda.ipynb`. This merges the Kaggle/Scraped data and removes "physically impossible" recipes (e.g., recipes with >5000 calories or 0g mass) and structurally broken rows.
-2. **Generate Training Prompts:** Run `notebooks/llm_data_prep.ipynb`. This applies the constraint mapping (Meal, Diet, Cooking Method) and exports the dataset to `data/training/llm_train.jsonl`.
+- `scripts/chef_tools.py`  
+  **The Tools.** Handles the Vector Database (RAG) for safety rules and recipe retrieval.
 
-### 3. Training 
-To be filled.
+- `scripts/api.py`  
+  Backend server implemented with FastAPI.
 
-### 4. Inference/Chatbot (Deployment)
-**Planned Phase:** The final model will be served via a FastAPI backend. To enable the "Continuous Chatbot" feature, we will use a Redis cache to manage conversational history (e.g., handling follow-up constraints like "I also have cheese"), separating the "Reasoning Brain" (Mistral) from the "Conversation Memory" (App Layer).
+- `scripts/frontend.py`  
+  Chat interface built with Streamlit.
+
+---
+
+## ⚙️ Setup & Configuration
+
+### 1. Installation
+
+Clone the repository and install dependencies:
+
+~~~bash
+git clone https://github.com/yourusername/ChefAI.git
+cd ChefAI
+pip install -r requirements.txt
+~~~
+
+---
+
+### 2. ⚠️ Important: Configure the Model
+
+Because the fine-tuned model weights are too large to host on GitHub, the system must download them from Hugging Face.
+
+1. Open `scripts/chefai.py`
+2. Locate the `__init__` function (around line 15)
+3. Update the `self.chef_path` variable as shown below
+
+~~~python
+# scripts/chefai.py
+
+# CHANGE THIS LINE:
+# self.chef_path = os.path.join(os.path.dirname(__file__), "../models/mistral_qlora")
+
+# TO THIS:
+self.chef_path = "hazarsozer/Chef-Mistral-7B"
+~~~
+
+**Note:**  
+The QLoRA adapters will be downloaded automatically the first time you run the application.
+
+---
+
+## 🚀 How to Run
+
+You must run the **Brain** and the **Interface** in separate terminals.
+
+---
+
+### Terminal 1: Start the Backend
+
+~~~bash
+python scripts/api.py
+~~~
+
+Wait until you see:
+
+~~~
+Application startup complete
+~~~
+
+---
+
+### Terminal 2: Start the Frontend
+
+~~~bash
+streamlit run scripts/frontend.py
+~~~
+
+The chat interface will open automatically in your browser.  
+Enjoy cooking! 🥘
